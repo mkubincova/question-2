@@ -32,3 +32,15 @@ button{
 button:hover{
     background-color: rgb(192, 125, 1);
 }
+
+div.countries-list{
+    display: flex;
+    max-width: 1000px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+div.countries-item{
+    border: 0.5px solid gray;
+    padding: 10px;
+    margin: 10px;
+}

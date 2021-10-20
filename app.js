@@ -16,42 +16,57 @@ app.get("/", function(req, res) {
 //handle form submit
 app.post("/", function(req, res) {
 
-    const query = req.body.countryName;
-    const url = "https://restcountries.com/v2/name/" + query;
+    const query = req.body.countryName.toLowerCase();
+    const queryCap = query.charAt(0).toUpperCase() + query.slice(1);
+    
+    const url = "https://restcountries.com/v2/all?fields=name,capital,currencies,flags,population";
 
     https.get(url, function(response){
-    
-        //take data from api
-        response.on("data", function(data){
 
+        let finalData = '';
+        response.on("data", function (data) {
+            finalData += data.toString();
+        });
+        response.on("end", function() {
+            const countryData = JSON.parse(finalData);
             
-            //make data readable
-            const countryData = JSON.parse(data);
-
             res.write("<html><head><link rel='stylesheet' href='css/style.css'></head>");
             res.write("<a href='/'>&larr; Go back</a><br>");
 
-            if (countryData.status == 404) {
-                res.write("<p>No country with this name, try again</p>");
+            const matchingData = countryData.filter(country => {
+                const res = country.name.includes(query) || country.name.includes(queryCap);
+                return res;
+            });
+            
+            if (matchingData.length < 1){
+                res.write("<p>No countries match your search</p>");
                 res.send();
-            } else{
-                const name = countryData[0].name;
-                const capital = countryData[0].capital;
-                const population = countryData[0].population;
-                const currency = countryData[0].currencies[0].name;
-                const flag = countryData[0].flags.svg;
+            } else {
+                res.write("<div class='countries-list'>");
 
+                for (let i = 0; i < matchingData.length; i++) {
+                    const name = matchingData[i].name;
+                    const capital = matchingData[i].capital;
+                    const population = matchingData[i].population;
+                    const currency = matchingData[i].currencies[0].name;
+                    const flag = matchingData[i].flags.svg;
+
+                    res.write("<div class='countries-item'>");
+                    res.write("<h1><img src=" + flag + " alt=" + name + "-flag /> " + name + "</h1>");
+                    res.write("<p>Capital: <span>" + capital + "</span></p>");
+                    res.write("<p>Population: <span>" + population + "</span></p>");
+                    res.write("<p>Currency: <span>" + currency + "</span></p>");
+                    res.write("</div>");
+                }
+                    
+                
+                res.write("</div>");
+                res.write("</html>");
+                
                 //show result to user
-                res.write("<h1><img src=" + flag + " alt=" + name + "-flag /> " + name + "</h1>");
-                res.write("<p>Capital: <span>" + capital + "</span></p>");
-                res.write("<p>Population: <span>" + population + "</span></p>");
-                res.write("<p>Currency: <span>" + currency + "</span></p>");
-                res.write("</html>")
-
                 res.send();
             }
-
-        });
+        });   
     })
 })
 
