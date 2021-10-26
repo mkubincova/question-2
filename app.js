@@ -6,6 +6,8 @@ const { runInNewContext } = require('vm');
 const app = express();
 
 app.use(bodyParser.urlencoded({extended:true}));
+
+//use css file in public folder
 app.use(express.static(__dirname + '/public'));
 
 //get html page with form
@@ -16,8 +18,8 @@ app.get("/", function(req, res) {
 //handle form submit
 app.post("/", function(req, res) {
 
-    const query = req.body.countryName.toLowerCase();
-    const queryCap = query.charAt(0).toUpperCase() + query.slice(1);
+    const query = req.body.countryName.toLowerCase(); //e.g. ma
+    const queryCap = query.charAt(0).toUpperCase() + query.slice(1); //e.g. Ma
     
     const url = "https://restcountries.com/v2/all?fields=name,capital,currencies,flags,population";
 
@@ -25,14 +27,15 @@ app.post("/", function(req, res) {
 
         let finalData = '';
         response.on("data", function (data) {
-            finalData += data.toString();
+            finalData += data.toString(); //save all req data to variable
         });
         response.on("end", function() {
-            const countryData = JSON.parse(finalData);
+            const countryData = JSON.parse(finalData); //convert data to object
             
             res.write("<html><head><link rel='stylesheet' href='css/style.css'></head>");
             res.write("<a href='/'>&larr; Go back</a><br>");
 
+            //filter countries that match the query
             const matchingData = countryData.filter(country => {
                 const res = country.name.includes(query) || country.name.includes(queryCap);
                 return res;
@@ -59,11 +62,9 @@ app.post("/", function(req, res) {
                     res.write("</div>");
                 }
                     
-                
                 res.write("</div>");
                 res.write("</html>");
                 
-                //show result to user
                 res.send();
             }
         });   
